@@ -1,0 +1,2 @@
+cd solution/java/src
+javac com/workattech/machinecoding/Driver.java

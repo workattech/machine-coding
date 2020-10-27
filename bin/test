@@ -1,0 +1,56 @@
+lang=$1
+case $lang in
+    java)
+        compiler='bin/compilers/java'
+        tester='bin/testers/java'
+        ;;
+    cpp)
+        compiler='bin/compilers/cpp'
+        tester='bin/testers/cpp'
+        ;;
+    py2)
+        tester='bin/testers/py2'
+        ;;
+    py3)
+        tester='bin/testers/py3'
+        ;;
+    *)
+        echo "Usage:\n\ntest lang\n\nwhere lang is any of java/cpp/py2/py3"
+        exit 2
+esac
+
+echo "Compiling..."
+$compiler
+status=$?
+if [ $status -ne 0 ]; then
+    echo "Compilation Failed" > result
+    cat result
+    exit $status
+fi
+
+echo "Compiled Successfully\n"
+echo "Testing..."
+
+total=0
+passed=0
+for input in tests/in/*; do
+    total=$((total + 1))
+    filename=${input##*/}
+    output="tests/out/${filename}"
+    expected="tests/expected/${filename}"
+    $tester < $input > $output
+    if [ $? -eq 0 ]; then
+        diff -w $expected $output
+        if [ $? -eq 0 ]; then
+            echo "Test #${filename} passed"
+            passed=$((passed + 1))
+        else
+            echo "Test #${filename} failed"
+        fi
+    else
+        echo "Error in running test  #${filename}\n"
+    fi
+done
+echo "\n"
+echo "Tests Passed: ${passed}\nTests Failed: $((total - passed))" > result
+cat result
